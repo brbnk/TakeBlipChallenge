@@ -1,21 +1,21 @@
 import { GithubService } from '../services/GithubService'
 import { Request, Response } from 'express'
-import { Pagination, Parameters } from '../models/GithubApi'
+import { Parameters } from '../models/GithubApi'
+import { sanitize } from '../utils/strings'
 
 const NodeCache = require('node-cache')
-
 const cache = new NodeCache()
-
-const cacheCofig = {
-  key: "GITHUBINFO",
-  time: 20
-}
 
 const service = new GithubService()
 
 export default {
   get: async (req: Request, res: Response) => {
     const { org, language, limit } = req.query
+
+    let cacheCofig = {
+      key: `${sanitize(String(org))}-${sanitize(String(language))}`,
+      time: 120
+    }
 
     const parameters: Parameters = {
       organization: org as string,
@@ -32,14 +32,12 @@ export default {
       if (data != null) {
         cache.set(cacheCofig.key, data, cacheCofig.time)
 
-        return res.status(200)
-          .json({ data })
+        return res.status(200).json({ data })
       }
 
       return res.status(400)
     }
 
-    return res.status(200)
-      .json({ data: cacheResponse })
+    return res.status(200).json({ data: cacheResponse })
   }
 }

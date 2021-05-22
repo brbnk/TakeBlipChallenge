@@ -46,7 +46,6 @@ export class GithubService implements IGithubService {
       }))
 
       return botCards.slice(0, limit)
-
     }
 
     return null
