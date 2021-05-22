@@ -12,7 +12,7 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-app.get('/', CardsController.get)
+app.get('/cards', CardsController.get)
 
 app.listen(PORT, () => {
   console.log(`Listenning on port ${PORT}`)
