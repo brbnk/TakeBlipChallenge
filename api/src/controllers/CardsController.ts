@@ -10,7 +10,7 @@ const service = new GithubService()
 export default {
   get: async (req: Request, res: Response) => {
     const { page, perPage, org, language } = req.query
-    const cacheKey = process.env.CACHE_KEY
+    const cacheKey = "GITHUBINFO"
 
     const pagination: Pagination = {
       page: page as string,
