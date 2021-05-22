@@ -3,7 +3,7 @@ import CardsController from './src/controllers/CardsController'
 
 require('dotenv').config()
 
-const PORT = process.env || 3000
+const PORT = process.env.PORT || 3000
 const cors = require('cors')
 
 const app: Application = express()
