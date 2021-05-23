@@ -1,8 +1,9 @@
-import { BotCard } from "../models/BotCard";
+import { BotCards } from "../models/BotCard";
 import { IGithubService } from "./IGithubService";
-import { GithubRepositoryInfo, Pagination } from "../models/GithubApi";
+import { GithubRepositoryInfo, Pagination, Parameters } from "../models/GithubApi";
 
 import axios, { AxiosInstance } from 'axios'
+import parseLinkHeader from 'parse-link-header'
 
 export class GithubService implements IGithubService {
   private axiosInstance: AxiosInstance
@@ -15,31 +16,47 @@ export class GithubService implements IGithubService {
     this.axiosInstance.defaults.headers['Accept'] = 'application/vnd.github.v3+json'
   }
 
-  public async getOrgRepositoriesByLanguage(org: string, language: string, pagination: Pagination): Promise<BotCard[] | null> {
-    const path = `/orgs/${org}/repos`
+  public async getOrgRepositoriesByLanguage({ organization, language, limit }: Parameters): Promise<BotCards | null> {
+    const path = `/orgs/${organization}/repos`
+
+    const pagination: Pagination = {
+      page: 1,
+      per_page: 30,
+      sort: 'created',
+      direction: 'asc'
+    }
+
     const parameters = this.getParameterString(pagination)
 
-    const { data, status } = await this.axiosInstance.get<GithubRepositoryInfo[]>(`${path}?${parameters}`)
+    const { data, status, headers } =
+      await this.axiosInstance.get<GithubRepositoryInfo[]>(`${path}?${parameters}`)
+
+    let linkHeader = parseLinkHeader(headers.link)
 
     if (status === 200) {
-      const filteredRepositories = this.filterRepositoriesByLanguage(data, language)
+      const filteredRepositoriesByLanguage =
+        await this.requestNextPages(data, linkHeader, limit, language)
 
-      const botCards: BotCard[] = filteredRepositories.map(({ description, full_name, owner }) => ({
-        description,
-        fullname: full_name,
-        avatar: owner.avatar_url
-      }))
+      const botCards = filteredRepositoriesByLanguage.map(repo => ({
+        description: repo.description,
+        fullname: repo.full_name,
+        avatar: repo.owner.avatar_url,
+        language: repo.language,
+        created: repo.created_at
+      })).slice(0, limit)
 
-      return botCards
+      const takeBlipObject = botCards.reduce((obj, card, index) => {
+        return { ...obj, [`card${index}`]: card}
+      }, {} as BotCards)
+
+      return takeBlipObject
     }
 
     return null
   }
 
   private filterRepositoriesByLanguage(repositories: GithubRepositoryInfo[], language: string) {
-    return repositories
-      .filter(d => d.language === language)
-      .slice(0, 5)
+    return repositories.filter(d => d.language === language)
   }
 
   private getParameterString(pagination: Pagination | any) {
@@ -49,5 +66,22 @@ export class GithubService implements IGithubService {
     })
 
     return parameters.join('&')
+  }
+
+  private async requestNextPages(data: GithubRepositoryInfo[], linkHeader: any, limit: number, language: string) {
+    let filteredRepositories = this.filterRepositoriesByLanguage(data, language)
+
+    while (filteredRepositories.length < limit && linkHeader?.next != null) {
+      let nextPage = await this.axiosInstance.get<GithubRepositoryInfo[]>(linkHeader.next.url)
+
+      filteredRepositories = [
+        ...filteredRepositories,
+        ...this.filterRepositoriesByLanguage(nextPage.data, language)
+      ]
+
+      linkHeader = parseLinkHeader(nextPage.headers.link)
+    }
+
+    return filteredRepositories
   }
 }

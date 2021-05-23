@@ -1,41 +1,43 @@
 import { GithubService } from '../services/GithubService'
 import { Request, Response } from 'express'
-import { Pagination } from '../models/GithubApi'
+import { Parameters } from '../models/GithubApi'
+import { sanitize } from '../utils/strings'
 
 const NodeCache = require('node-cache')
-
 const cache = new NodeCache()
+
 const service = new GithubService()
 
 export default {
   get: async (req: Request, res: Response) => {
-    const { page, perPage, org, language } = req.query
-    const cacheKey = "GITHUBINFO"
+    const { org, language, limit } = req.query
 
-    const pagination: Pagination = {
-      page: page as string,
-      per_page: perPage as string,
-      direction: 'asc',
-      sort: 'created'
+    let cacheCofig = {
+      key: `${sanitize(String(org))}-${sanitize(String(language))}`,
+      time: 120
     }
 
-    const cacheResponse = cache.get(cacheKey)
+    const parameters: Parameters = {
+      organization: org as string,
+      language: language as string,
+      limit: Number(limit)
+    }
+
+    const cacheResponse = cache.get(cacheCofig.key)
 
     if (cacheResponse ===  undefined) {
       const data = await service
-        .getOrgRepositoriesByLanguage(String(org), String(language), pagination)
+        .getOrgRepositoriesByLanguage(parameters)
 
       if (data != null) {
-        cache.set(cacheKey, data, 20)
+        cache.set(cacheCofig.key, data, cacheCofig.time)
 
-        return res.status(200)
-          .json({ data })
+        return res.status(200).json({ data })
       }
 
       return res.status(400)
     }
 
-    return res.status(200)
-      .json({ data: cacheResponse })
+    return res.status(200).json({ data: cacheResponse })
   }
 }
