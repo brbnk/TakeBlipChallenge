@@ -1,12 +1,12 @@
-import { BotCards } from "../models/BotCard";
+import { BotCard, BotCards } from "../models/BotCard";
 import { IGithubService } from "./IGithubService";
 import { GithubRepositoryInfo, Pagination, Parameters } from "../models/GithubApi";
-
 import axios, { AxiosInstance } from 'axios'
 import parseLinkHeader from 'parse-link-header'
 
 export class GithubService implements IGithubService {
   private axiosInstance: AxiosInstance
+  private pagination: Pagination
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -14,19 +14,12 @@ export class GithubService implements IGithubService {
     })
 
     this.axiosInstance.defaults.headers['Accept'] = 'application/vnd.github.v3+json'
+    this.pagination = { page: 1, per_page: 30, sort: 'created', direction: 'asc' }
   }
 
   public async getOrgRepositoriesByLanguage({ organization, language, limit }: Parameters): Promise<BotCards | null> {
     const path = `/orgs/${organization}/repos`
-
-    const pagination: Pagination = {
-      page: 1,
-      per_page: 30,
-      sort: 'created',
-      direction: 'asc'
-    }
-
-    const parameters = this.getParameterString(pagination)
+    const parameters = this.getParameterString(this.pagination)
 
     try {
       const { data, status, headers } =
@@ -35,28 +28,33 @@ export class GithubService implements IGithubService {
       let linkHeader = parseLinkHeader(headers.link)
 
       if (status === 200) {
-        const filteredRepositoriesByLanguage =
-          await this.requestNextPages(data, linkHeader, limit, language)
-
-        const botCards = filteredRepositoriesByLanguage.map(repo => ({
-          description: repo.description,
-          fullname: repo.full_name,
-          avatar: repo.owner.avatar_url,
-          language: repo.language,
-          created: repo.created_at
-        })).slice(0, limit)
-
-        const takeBlipObject = botCards.reduce((obj, card, index) => {
-          return { ...obj, [`card${index}`]: card}
-        }, {} as BotCards)
-
+        const filteredRepositoriesByLanguage = await this.requestNextPages(data, linkHeader, limit, language)
+        const botCards = this.mapGithubResponseToBotCard(filteredRepositoriesByLanguage).slice(0, limit)
+        const takeBlipObject = this.getTakeBlipObject(botCards)
         return takeBlipObject
       }
 
       return null
-    } catch (error) {
+    }
+    catch (error) {
       return null // prevent app crash
     }
+  }
+
+  private mapGithubResponseToBotCard(repositories: GithubRepositoryInfo[]): BotCard[] {
+    return repositories.map(repo => ({
+      description: repo.description,
+      fullname: repo.full_name,
+      avatar: repo.owner.avatar_url,
+      language: repo.language,
+      created: repo.created_at
+    }))
+  }
+
+  private getTakeBlipObject(cards: BotCard[]) {
+    return cards.reduce((obj, card, index) => {
+      return { ...obj, [`card${index}`]: card}
+    }, {} as BotCards)
   }
 
   private filterRepositoriesByLanguage(repositories: GithubRepositoryInfo[], language: string) {
