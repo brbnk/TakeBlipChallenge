@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtmAyNB0XJKRhS4zMU6heS64Ghm-xxYiVyyUfNQ1QdjsEFJW-SiBCdJH3_Af0rWPnaXfA&usqp=CAU" width="200px">
+  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtmAyNB0XJKRhS4zMU6heS64Ghm-xxYiVyyUfNQ1QdjsEFJW-SiBCdJH3_Af0rWPnaXfA&usqp=CAU" width="1500px">
   <span> &nbsp &nbsp &nbsp &nbsp</span>
   <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7WVmSy2jD2i1h_quzZb3upizNZ-W1gIcwvU0IBqLUtdnoTXdAviPbwIekRywq34myqA&usqp=CAU" width="200px"> 
   <span> &nbsp &nbsp &nbsp &nbsp</span>
