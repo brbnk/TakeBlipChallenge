@@ -35,7 +35,7 @@ export default {
         return res.status(200).json({ data })
       }
 
-      return res.status(400)
+      return res.status(400).json(data)
     }
 
     return res.status(200).json({ data: cacheResponse })
