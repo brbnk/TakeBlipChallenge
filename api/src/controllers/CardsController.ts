@@ -1,21 +1,25 @@
-import { GithubService } from '../services/GithubService'
 import { Request, Response } from 'express'
 import { Parameters } from '../models/GithubApi'
+import { BotCards } from '../models/BotCard'
 import { sanitize } from '../utils/strings'
+import { GithubService } from '../services/GithubService'
+import { HttpResponse } from '../core/http'
+import { Cache } from '../core/cache'
 
-const NodeCache = require('node-cache')
-const cache = new NodeCache()
-
-const service = new GithubService()
+const cache = new Cache<BotCards>()
 
 export default {
   get: async (req: Request, res: Response) => {
     const { org, language, limit } = req.query
 
-    let cacheCofig = {
-      key: `${sanitize(String(org))}-${sanitize(String(language))}`,
+    // cache key follows the pattern: 'org-language-limit'
+    cache.setConfig({
+      key: `${sanitize(String(org))}-${sanitize(String(language))}-${limit}`,
       time: 120
-    }
+    })
+
+    const service = new GithubService()
+    const httpResponse = new HttpResponse<BotCards>(res)
 
     const parameters: Parameters = {
       organization: org as string,
@@ -23,21 +27,19 @@ export default {
       limit: Number(limit)
     }
 
-    const cacheResponse = cache.get(cacheCofig.key)
+    const cacheResponse = cache.getValue()
 
     if (cacheResponse ===  undefined) {
-      const data = await service
-        .getOrgRepositoriesByLanguage(parameters)
+      const data = await service.getOrgRepositoriesByLanguage(parameters)
 
       if (data != null) {
-        cache.set(cacheCofig.key, data, cacheCofig.time)
-
-        return res.status(200).json({ data })
+        cache.setValue(data)
+        return httpResponse.Ok(data)
       }
 
-      return res.status(400).json(data)
+      return httpResponse.BadRequest()
     }
 
-    return res.status(200).json({ data: cacheResponse })
+    return httpResponse.Ok(cacheResponse)
   }
 }
