@@ -8,7 +8,7 @@ export class HttpResponse<T> {
   }
 
   public Ok(data: T) {
-    return this.response.status(200).json(data)
+    return this.response.status(200).json({ data })
   }
 
   public BadRequest() {
