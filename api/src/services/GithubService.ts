@@ -1,4 +1,4 @@
-import { BotCard } from "../models/BotCard";
+import { BotCards } from "../models/BotCard";
 import { IGithubService } from "./IGithubService";
 import { GithubRepositoryInfo, Pagination, Parameters } from "../models/GithubApi";
 
@@ -16,7 +16,7 @@ export class GithubService implements IGithubService {
     this.axiosInstance.defaults.headers['Accept'] = 'application/vnd.github.v3+json'
   }
 
-  public async getOrgRepositoriesByLanguage({ organization, language, limit }: Parameters): Promise<BotCard[] | null> {
+  public async getOrgRepositoriesByLanguage({ organization, language, limit }: Parameters): Promise<BotCards | null> {
     const path = `/orgs/${organization}/repos`
 
     const pagination: Pagination = {
@@ -43,9 +43,13 @@ export class GithubService implements IGithubService {
         avatar: repo.owner.avatar_url,
         language: repo.language,
         created: repo.created_at
-      }))
+      })).slice(0, limit)
 
-      return botCards.slice(0, limit)
+      const takeBlipObject = botCards.reduce((obj, card, index) => {
+        return { ...obj, [`card${index}`]: card}
+      }, {} as BotCards)
+
+      return takeBlipObject
     }
 
     return null
