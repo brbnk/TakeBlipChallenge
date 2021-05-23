@@ -29,5 +29,5 @@
  ## API
   - API has only one endpoint: `/cards`
   - It accepts three query parameters `org`, `limit`, and `language`
-  - The api has been delpoyed in Heroku and you can use it: https://takeblipchallenge.herokuapp.com/cards?org=takenet&limit=5&language=C%23 
+  - The api has been deployed in Heroku and you can use it: https://takeblipchallenge.herokuapp.com/cards?org=takenet&limit=5&language=C%23 
 
