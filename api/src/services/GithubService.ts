@@ -28,31 +28,35 @@ export class GithubService implements IGithubService {
 
     const parameters = this.getParameterString(pagination)
 
-    const { data, status, headers } =
-      await this.axiosInstance.get<GithubRepositoryInfo[]>(`${path}?${parameters}`)
+    try {
+      const { data, status, headers } =
+        await this.axiosInstance.get<GithubRepositoryInfo[]>(`${path}?${parameters}`)
 
-    let linkHeader = parseLinkHeader(headers.link)
+      let linkHeader = parseLinkHeader(headers.link)
 
-    if (status === 200) {
-      const filteredRepositoriesByLanguage =
-        await this.requestNextPages(data, linkHeader, limit, language)
+      if (status === 200) {
+        const filteredRepositoriesByLanguage =
+          await this.requestNextPages(data, linkHeader, limit, language)
 
-      const botCards = filteredRepositoriesByLanguage.map(repo => ({
-        description: repo.description,
-        fullname: repo.full_name,
-        avatar: repo.owner.avatar_url,
-        language: repo.language,
-        created: repo.created_at
-      })).slice(0, limit)
+        const botCards = filteredRepositoriesByLanguage.map(repo => ({
+          description: repo.description,
+          fullname: repo.full_name,
+          avatar: repo.owner.avatar_url,
+          language: repo.language,
+          created: repo.created_at
+        })).slice(0, limit)
 
-      const takeBlipObject = botCards.reduce((obj, card, index) => {
-        return { ...obj, [`card${index}`]: card}
-      }, {} as BotCards)
+        const takeBlipObject = botCards.reduce((obj, card, index) => {
+          return { ...obj, [`card${index}`]: card}
+        }, {} as BotCards)
 
-      return takeBlipObject
+        return takeBlipObject
+      }
+
+      return null
+    } catch (error) {
+      return null // prevent app crash
     }
-
-    return null
   }
 
   private filterRepositoriesByLanguage(repositories: GithubRepositoryInfo[], language: string) {
