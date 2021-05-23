@@ -3,9 +3,9 @@
   <span> &nbsp &nbsp &nbsp &nbsp</span>
   <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7WVmSy2jD2i1h_quzZb3upizNZ-W1gIcwvU0IBqLUtdnoTXdAviPbwIekRywq34myqA&usqp=CAU" width="200px"> 
   <span> &nbsp &nbsp &nbsp &nbsp</span>
-  <img src="https://expressjs.com/images/express-facebook-share.png" width="240px">
+  <img src="https://expressjs.com/images/express-facebook-share.png" width="220px">
   <span> &nbsp &nbsp &nbsp &nbsp</span>
-  <img src="https://www.hostko.si/blog/wp-content/uploads/2019/07/nodejs-logo.png" width="300px">
+  <img src="https://www.hostko.si/blog/wp-content/uploads/2019/07/nodejs-logo.png" width="250px">
 </div>
 <br />
 
